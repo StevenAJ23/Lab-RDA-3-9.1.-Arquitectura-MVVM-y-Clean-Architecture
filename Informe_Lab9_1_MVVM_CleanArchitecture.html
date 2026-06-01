@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe Lab 9.1 - MVVM y Clean Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Times New Roman', serif; font-size: 12pt; color: #1a1a1a; background: #fff; }
+
+  /* ── Portada ── */
+  .cover {
+    page-break-after: always;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center;
+    padding: 60px 80px;
+    border-bottom: 4px solid #1a3a6b;
+  }
+  .cover .logo-area { margin-bottom: 30px; }
+  .cover .uni { font-size: 15pt; font-weight: bold; color: #1a3a6b; margin-bottom: 6px; }
+  .cover .faculty { font-size: 12pt; color: #333; margin-bottom: 4px; }
+  .cover .subject { font-size: 11pt; color: #555; margin-bottom: 40px; }
+  .cover .title { font-size: 20pt; font-weight: bold; color: #1a3a6b; margin-bottom: 10px; line-height: 1.3; }
+  .cover .subtitle { font-size: 14pt; color: #2c5faa; margin-bottom: 50px; }
+  .cover .meta { font-size: 11pt; line-height: 2; color: #333; }
+  .cover .meta strong { color: #1a1a1a; }
+  .cover .date { margin-top: 50px; font-size: 11pt; color: #555; }
+
+  /* ── Contenido general ── */
+  .page { padding: 40px 80px; max-width: 900px; margin: 0 auto; }
+
+  h1 { font-size: 16pt; color: #1a3a6b; border-bottom: 2px solid #1a3a6b; padding-bottom: 6px; margin: 30px 0 14px; }
+  h2 { font-size: 13pt; color: #2c5faa; margin: 22px 0 10px; }
+  h3 { font-size: 11pt; color: #1a1a1a; margin: 16px 0 8px; font-style: italic; }
+
+  p { text-align: justify; line-height: 1.7; margin-bottom: 10px; }
+  ul, ol { margin: 10px 0 10px 28px; line-height: 1.8; }
+  li { margin-bottom: 4px; }
+
+  /* Código */
+  pre {
+    background: #f4f4f4; border: 1px solid #ccc; border-left: 4px solid #2c5faa;
+    padding: 14px 16px; margin: 12px 0; overflow-x: auto;
+    font-family: 'Courier New', monospace; font-size: 9.5pt; line-height: 1.5;
+    border-radius: 4px;
+  }
+  code { font-family: 'Courier New', monospace; font-size: 9.5pt; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
+
+  /* Placeholder de captura */
+  .screenshot-box {
+    border: 2px dashed #aaa; background: #fafafa;
+    min-height: 220px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 16px 0; border-radius: 6px; color: #777; text-align: center; padding: 20px;
+  }
+  .screenshot-box .icon { font-size: 36pt; margin-bottom: 10px; }
+  .screenshot-box .label { font-size: 10pt; font-weight: bold; color: #555; }
+  .screenshot-box .hint { font-size: 9pt; color: #999; margin-top: 6px; }
+
+  /* Tabla */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 10.5pt; }
+  th { background: #1a3a6b; color: #fff; padding: 8px 12px; text-align: left; }
+  td { border: 1px solid #ccc; padding: 7px 12px; }
+  tr:nth-child(even) td { background: #f7f7f7; }
+
+  /* Cuadro de capas */
+  .layer-box { border: 2px solid #2c5faa; border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+  .layer-box .layer-title { font-weight: bold; color: #1a3a6b; margin-bottom: 8px; font-size: 11pt; }
+  .layer-box ul { margin-left: 20px; }
+
+  /* Nota */
+  .note { background: #eaf2ff; border-left: 4px solid #2c5faa; padding: 10px 14px; margin: 14px 0; border-radius: 0 4px 4px 0; font-size: 10.5pt; }
+
+  /* Desafío */
+  .challenge { background: #fff8e1; border-left: 4px solid #f9a825; padding: 12px 16px; margin: 14px 0; border-radius: 0 4px 4px 0; }
+
+  /* Página de separación */
+  .page-break { page-break-before: always; }
+
+  /* Pie de página */
+  .footer { text-align: center; font-size: 9pt; color: #aaa; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 40px; }
+
+  @media print {
+    body { font-size: 11pt; }
+    .cover { min-height: 297mm; }
+    .page-break { page-break-before: always; }
+    pre { white-space: pre-wrap; word-break: break-all; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     PORTADA
+     ══════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="logo-area">
+    <div class="uni">Universidad / Instituto Superior</div>
+    <div class="faculty">Facultad de Ingeniería en Sistemas y Computación</div>
+    <div class="subject">Desarrollo de Aplicaciones Móviles — RDA-3</div>
+  </div>
+
+  <div class="title">Laboratorio 9.1</div>
+  <div class="subtitle">Arquitectura de Aplicaciones Android<br>MVVM y Clean Architecture</div>
+
+  <div class="meta">
+    <strong>Estudiante:</strong> Steven Rosero<br>
+    <strong>Correo:</strong> roseroariel23@gmail.com<br>
+    <strong>GitHub:</strong> StevenAJ23<br>
+    <strong>Repositorio:</strong> RDA-3-Lab9.1.ArquitecturaMVVMyCleanArchitecture<br>
+    <strong>Docente:</strong> [Nombre del Docente]<br>
+    <strong>Período:</strong> 2026-1
+  </div>
+
+  <div class="date">Fecha de entrega: 01 de junio de 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 1 — INTRODUCCIÓN
+     ══════════════════════════════════════════════════ -->
+<div class="page">
+
+<h1>1. Introducción</h1>
+
+<p>
+El desarrollo profesional de aplicaciones Android ha evolucionado significativamente desde los
+enfoques monolíticos donde toda la lógica residía en una única Activity. Este antipatrón,
+conocido como <em>"God Activity"</em>, genera problemas críticos como fragilidad ante cambios,
+imposibilidad de realizar pruebas unitarias aisladas y fugas de memoria (Memory Leaks) al rotar
+la pantalla del dispositivo.
+</p>
+<p>
+El presente informe documenta la implementación del Laboratorio 9.1, cuyo objetivo central es
+construir una mini-aplicación de <strong>Gestión de Tareas Académicas</strong> aplicando
+estrictamente las directrices de <strong>Clean Architecture</strong> (Arquitectura Limpia) combinadas
+con el patrón de diseño <strong>MVVM (Model-View-ViewModel)</strong> y el paradigma
+<strong>Flujo Unidireccional de Datos (UDF)</strong>. La solución emplea Jetpack Compose para la
+capa de presentación declarativa, junto con <code>StateFlow</code> y <code>Flow</code> de Kotlin
+Coroutines para la gestión reactiva del estado.
+</p>
+<p>
+La aplicación prescinde de persistencia en base de datos real (Room) y utiliza un repositorio
+simulado en memoria que emite flujos reactivos, permitiendo concentrar el aprendizaje en la
+separación de responsabilidades y el desacoplamiento de capas.
+</p>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 2 — OBJETIVOS
+     ══════════════════════════════════════════════════ -->
+<h1>2. Objetivos</h1>
+
+<h2>2.1 Objetivo General</h2>
+<p>
+Implementar una aplicación Android funcional de gestión de tareas académicas aplicando los
+principios de Clean Architecture y el patrón MVVM con Flujo Unidireccional de Datos, garantizando
+la separación física de capas y la inmunidad de la interfaz ante cambios en el ciclo de vida.
+</p>
+
+<h2>2.2 Objetivos Específicos</h2>
+<ul>
+  <li>Diseñar e implementar físicamente la separación de capas <strong>Domain</strong>, <strong>Data</strong> y <strong>Presentation</strong> como paquetes independientes dentro del proyecto Android.</li>
+  <li>Configurar un ecosistema reactivo donde el estado fluya hacia abajo mediante <code>StateFlow</code> y los eventos viajen hacia arriba mediante callbacks controlados (UDF).</li>
+  <li>Abstraer las operaciones de negocio mediante <strong>Use Cases</strong>, asegurando que sean independientes del framework de Android y de librerías externas de interfaz visual.</li>
+  <li>Implementar el <strong>Desafío Extra</strong>: una regla de dominio que prohíba títulos de tareas con menos de 5 caracteres, con recuperación controlada desde la UI sin crashes.</li>
+</ul>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 3 — MARCO TEÓRICO
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">3. Marco Teórico</h1>
+
+<h2>3.1 Clean Architecture</h2>
+<p>
+Propuesta por Robert C. Martin (Uncle Bob), la Arquitectura Limpia organiza el código en capas
+concéntricas donde las dependencias apuntan siempre hacia el núcleo (regla de dependencia).
+Cada capa solo conoce a las capas internas y nunca a las externas.
+</p>
+<div style="text-align:center; margin: 20px 0; font-family: monospace; font-size: 10pt; line-height: 1.6;">
+  ┌──────────────────────────────────┐<br>
+  │   Frameworks &amp; Drivers (UI, DB)  │  ← capa más externa<br>
+  │  ┌────────────────────────────┐  │<br>
+  │  │  Interface Adapters (MVVM) │  │<br>
+  │  │  ┌──────────────────────┐  │  │<br>
+  │  │  │  Application (Use Cases)│  │  │<br>
+  │  │  │  ┌────────────────┐  │  │  │<br>
+  │  │  │  │  Domain/Entities│  │  │  │  ← núcleo puro<br>
+  │  │  │  └────────────────┘  │  │  │<br>
+  │  │  └──────────────────────┘  │  │<br>
+  │  └────────────────────────────┘  │<br>
+  └──────────────────────────────────┘
+</div>
+
+<h2>3.2 Patrón MVVM (Model-View-ViewModel)</h2>
+<p>
+MVVM separa la interfaz de usuario de la lógica de negocio mediante un <strong>ViewModel</strong>
+que actúa como mediador. El modelo expone el estado mediante flujos observables, la vista
+reacciona a esos flujos y envía eventos de usuario al ViewModel sin conocer la fuente de datos.
+</p>
+<ul>
+  <li><strong>Model:</strong> entidades del dominio y repositorios de datos.</li>
+  <li><strong>View:</strong> composables de Jetpack Compose que reaccionan al estado.</li>
+  <li><strong>ViewModel:</strong> encapsula la mutabilidad, sobrevive cambios de configuración (rotación de pantalla) y coordina los Use Cases.</li>
+</ul>
+
+<h2>3.3 Flujo Unidireccional de Datos (UDF)</h2>
+<p>
+En UDF el estado fluye siempre en una sola dirección: el <strong>ViewModel</strong> expone un
+<code>StateFlow</code> inmutable que la vista consume mediante <code>collectAsState()</code>.
+Los eventos de usuario (clic en checkbox, guardar tarea) viajan en dirección contraria como
+llamadas a funciones del ViewModel, que actualiza el estado interno y el flujo se propaga
+automáticamente a la vista.
+</p>
+
+<pre>Vista (evento usuario)  →  ViewModel.onXxx()  →  Use Case  →  Repository
+Repository  →  Flow  →  Use Case  →  ViewModel._uiState  →  Vista (recomposición)</pre>
+
+<h2>3.4 StateFlow y Flow de Kotlin Coroutines</h2>
+<ul>
+  <li><strong>Flow&lt;T&gt;:</strong> flujo frío y asíncrono. El repositorio emite listas de tareas cada vez que cambia el <code>MutableStateFlow</code> interno.</li>
+  <li><strong>StateFlow&lt;T&gt;:</strong> flujo caliente con un valor actual siempre disponible. El ViewModel expone el <code>UiState</code> como <code>StateFlow</code> de solo lectura.</li>
+  <li><strong>collectAsState():</strong> suscribe un composable de Compose al flujo y dispara recomposiciones automáticas cuando el estado cambia.</li>
+</ul>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 4 — DESARROLLO
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">4. Desarrollo e Implementación</h1>
+
+<h2>4.1 Preparación del Proyecto y Árbol de Paquetes</h2>
+<p>
+Se partió del proyecto base del Laboratorio 5.2 (recomposición y State Hoisting), se renombró
+en <code>settings.gradle.kts</code> como <code>AcademicArchitectureLab</code> y se estructuró
+físicamente el árbol de paquetes bajo <code>com.example.programacionmovil</code>:
+</p>
+<table>
+  <tr><th>Paquete</th><th>Responsabilidad</th></tr>
+  <tr><td><code>domain.model</code></td><td>Entidades puras del negocio (sin dependencias externas)</td></tr>
+  <tr><td><code>domain.repository</code></td><td>Contratos abstractos (interfaces) de acceso a datos</td></tr>
+  <tr><td><code>domain.usecase</code></td><td>Operaciones atómicas del negocio (casos de uso)</td></tr>
+  <tr><td><code>data.repository</code></td><td>Implementaciones concretas de los contratos</td></tr>
+  <tr><td><code>ui.presentation.tasks</code></td><td>ViewModel, estados UI y vistas Compose</td></tr>
+</table>
+
+<h3>Captura de la estructura de paquetes en Android Studio</h3>
+<div class="screenshot-box">
+  <div class="icon">📁</div>
+  <div class="label">INSERTAR CAPTURA — Estructura de paquetes en Android Studio</div>
+  <div class="hint">Vista Android → app → java → com.example.programacionmovil mostrando todas las subcarpetas</div>
+</div>
+
+<h2>4.2 Capa de Dominio (Domain Layer)</h2>
+<p>
+La capa de dominio es el núcleo de la arquitectura. No contiene ninguna dependencia de Android
+ni de librerías de interfaz visual, lo que garantiza su portabilidad y testabilidad completa.
+</p>
+
+<h3>4.2.1 Entidad AcademicTask</h3>
+<p>
+Modelo de datos inmutable que representa una tarea académica. Al ser una <code>data class</code>
+de Kotlin, provee automáticamente <code>equals()</code>, <code>hashCode()</code> y <code>copy()</code>,
+necesario para la mutación inmutable del estado.
+</p>
+<pre>data class AcademicTask(
+    val id: String,
+    val title: String,
+    val isCompleted: Boolean
+)</pre>
+
+<h3>4.2.2 Contrato AcademicTaskRepository</h3>
+<p>
+Interfaz que define las capacidades puras del sistema de forma abstracta. La capa de dominio
+solo conoce este contrato, nunca la implementación concreta, aplicando el principio de
+<strong>Inversión de Dependencias (DIP)</strong> de SOLID.
+</p>
+<pre>interface AcademicTaskRepository {
+    fun getTasksStream(): Flow&lt;List&lt;AcademicTask&gt;&gt;
+    suspend fun addTask(title: String)
+    suspend fun toggleTaskCompletion(taskId: String)
+}</pre>
+
+<h3>4.2.3 Caso de Uso GetTasksUseCase</h3>
+<p>
+Encapsula la única intención de obtener el flujo reactivo de tareas. Al sobreescribir el operador
+<code>invoke</code>, permite llamar al caso de uso como si fuera una función directamente.
+</p>
+<pre>class GetTasksUseCase(private val repository: AcademicTaskRepository) {
+    operator fun invoke(): Flow&lt;List&lt;AcademicTask&gt;&gt; {
+        return repository.getTasksStream()
+    }
+}</pre>
+
+<h3>4.2.4 Caso de Uso AddTaskUseCase (con Desafío Extra)</h3>
+<p>
+Contiene lógica de negocio pura: valida que el título no esté vacío y que cumpla el mínimo de
+5 caracteres antes de invocar la infraestructura. Esta validación vive en el dominio porque es
+una regla del negocio, no de la UI.
+</p>
+<pre>class AddTaskUseCase(private val repository: AcademicTaskRepository) {
+    suspend operator fun invoke(title: String) {
+        if (title.trim().isBlank()) {
+            throw IllegalArgumentException("El título no puede estar vacío.")
+        }
+        if (title.trim().length &lt; 5) {
+            throw IllegalArgumentException(
+                "La regla de dominio exige un mínimo de 5 caracteres."
+            )
+        }
+        repository.addTask(title.trim())
+    }
+}</pre>
+
+<h2>4.3 Capa de Datos (Data Layer)</h2>
+<p>
+La capa de datos provee la implementación concreta del contrato definido en el dominio.
+<code>InMemoryTaskRepository</code> simula una base de datos reactiva usando
+<code>MutableStateFlow</code>, que emite una nueva lista cada vez que se modifica su valor,
+propagando automáticamente los cambios a todos los colectores suscritos.
+</p>
+<pre>class InMemoryTaskRepository : AcademicTaskRepository {
+
+    private val tasksFlow = MutableStateFlow&lt;List&lt;AcademicTask&gt;&gt;(
+        listOf(
+            AcademicTask(UUID.randomUUID().toString(), "Estudiar Patrón MVVM", false),
+            AcademicTask(UUID.randomUUID().toString(), "Analizar principios de Clean Architecture", true)
+        )
+    )
+
+    override fun getTasksStream(): Flow&lt;List&lt;AcademicTask&gt;&gt; = tasksFlow
+
+    override suspend fun addTask(title: String) {
+        val newTask = AcademicTask(UUID.randomUUID().toString(), title, false)
+        tasksFlow.value = tasksFlow.value + newTask
+    }
+
+    override suspend fun toggleTaskCompletion(taskId: String) {
+        tasksFlow.value = tasksFlow.value.map { task -&gt;
+            if (task.id == taskId) task.copy(isCompleted = !task.isCompleted) else task
+        }
+    }
+}</pre>
+
+<div class="note">
+  <strong>Nota:</strong> <code>MutableStateFlow</code> actúa como una base de datos en memoria
+  reactiva. Cada asignación a <code>.value</code> dispara automáticamente la emisión de la nueva
+  lista a todos los colectores suscritos, sin necesidad de notificación manual.
+</div>
+
+<h2 class="page-break">4.4 Capa de Presentación (Presentation Layer — MVVM + UDF)</h2>
+
+<h3>4.4.1 Estados de la UI (Sealed Class)</h3>
+<p>
+Se utiliza una <code>sealed class</code> para modelar los estados lógicos finitos de la interfaz.
+Esto garantiza que el <code>when</code> en Compose sea exhaustivo y que ningún estado quede
+sin tratamiento en la vista.
+</p>
+<pre>sealed class AcademicTaskUiState {
+    object Loading : AcademicTaskUiState()
+    data class Success(val tasks: List&lt;AcademicTask&gt;) : AcademicTaskUiState()
+    data class Error(val message: String) : AcademicTaskUiState()
+}
+
+enum class ScreenType { LIST, CREATE }</pre>
+
+<h3>4.4.2 AcademicTaskViewModel</h3>
+<p>
+El ViewModel cumple cuatro responsabilidades clave bajo el patrón UDF:
+</p>
+<ul>
+  <li>Mantiene el estado interno como <code>MutableStateFlow</code> (privado e inaccesible).</li>
+  <li>Expone únicamente el <code>StateFlow</code> inmutable de solo lectura hacia la vista.</li>
+  <li>Coordina los Use Cases mediante <code>viewModelScope</code> (coroutine lifecycle-aware).</li>
+  <li>Gestiona la navegación entre pantallas con <code>mutableStateOf</code> de Compose Runtime.</li>
+</ul>
+<pre>class AcademicTaskViewModel(
+    private val getTasksUseCase: GetTasksUseCase,
+    private val addTaskUseCase: AddTaskUseCase,
+    private val repository: AcademicTaskRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow&lt;AcademicTaskUiState&gt;(AcademicTaskUiState.Loading)
+    val uiState: StateFlow&lt;AcademicTaskUiState&gt; = _uiState.asStateFlow()
+
+    var currentScreen by mutableStateOf(ScreenType.LIST)
+        private set
+
+    init { observeTasks() }
+
+    private fun observeTasks() {
+        viewModelScope.launch {
+            getTasksUseCase().collect { taskList -&gt;
+                _uiState.value = AcademicTaskUiState.Success(taskList)
+            }
+        }
+    }
+    // ... onTaskCheckedChange(), onSaveTask(), onNavigateToCreate(), etc.
+}</pre>
+
+<h3>4.4.3 Vistas Declarativas (AcademicTaskScreen.kt)</h3>
+<p>
+Las vistas Compose son componentes puramente declarativos: no almacenan ni gestionan datos,
+solo reaccionan a las emisiones del estado inmutable mediante <code>collectAsState()</code>.
+La función <code>AcademicTaskApp</code> actúa como enrutador entre las dos pantallas.
+</p>
+
+<h2>4.5 Orquestación en MainActivity</h2>
+<p>
+La <code>MainActivity</code> actúa como punto de entrada y compositor del grafo de dependencias,
+manteniendo la separación de responsabilidades: no contiene lógica de negocio ni accede
+directamente a datos.
+</p>
+<pre>class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        val repository = InMemoryTaskRepository()
+        val getTasksUseCase = GetTasksUseCase(repository)
+        val addTaskUseCase = AddTaskUseCase(repository)
+        val viewModel = AcademicTaskViewModel(getTasksUseCase, addTaskUseCase, repository)
+
+        setContent {
+            ProgramacionMovilTheme {
+                AcademicTaskApp(viewModel = viewModel)
+            }
+        }
+    }
+}</pre>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 5 — VERIFICACIONES
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">5. Verificaciones en el Emulador (API 36)</h1>
+
+<h2>5.1 Pantalla Inicial — Estado Loading y Lista Predeterminada</h2>
+<p>
+Al iniciar la aplicación, el <code>_uiState</code> emite primero <code>Loading</code>, mostrando
+un <code>CircularProgressIndicator</code>. Inmediatamente, el <code>getTasksUseCase</code>
+recolecta el flujo del repositorio y emite <code>Success</code> con las dos tareas predeterminadas.
+</p>
+
+<div class="screenshot-box">
+  <div class="icon">📱</div>
+  <div class="label">INSERTAR CAPTURA — Pantalla inicial con lista de tareas predeterminadas</div>
+  <div class="hint">Emulador API 36 mostrando: "Estudiar Patrón MVVM" y "Analizar principios de Clean Architecture"</div>
+</div>
+
+<h2>5.2 Interacción de Estados (UDF) — Checkbox</h2>
+<p>
+Al hacer clic en un <code>Checkbox</code>, el evento sube al ViewModel mediante
+<code>onTaskCheckedChange(task.id)</code>. El ViewModel llama a
+<code>repository.toggleTaskCompletion(taskId)</code>, que actualiza el
+<code>MutableStateFlow</code> del repositorio con la tarea copiada con el estado invertido.
+El flujo emite la lista actualizada, el ViewModel propaga el nuevo <code>Success</code> y
+Compose recompone únicamente la fila afectada.
+</p>
+
+<div class="screenshot-box">
+  <div class="icon">✅</div>
+  <div class="label">INSERTAR CAPTURA — Checkbox marcado y actualizado en la lista</div>
+  <div class="hint">Mostrar una tarea con el checkbox activado/desactivado tras hacer clic</div>
+</div>
+
+<h2>5.3 Flujo de Inserción de Nueva Tarea</h2>
+<p>
+Al pulsar el botón "+", el ViewModel llama a <code>onNavigateToCreate()</code>, cambiando
+<code>currentScreen</code> a <code>ScreenType.CREATE</code>. Compose detecta el cambio y
+renderiza <code>AcademicTaskCreateScreen</code>. Al completar el formulario y pulsar "Guardar",
+<code>addTaskUseCase(newTaskTitle)</code> valida el título, lo agrega al repositorio y el flujo
+reactivo propaga la nueva lista con la tarea añadida al final de la <code>LazyColumn</code>.
+</p>
+
+<div class="screenshot-box">
+  <div class="icon">➕</div>
+  <div class="label">INSERTAR CAPTURA — Formulario de nueva tarea</div>
+  <div class="hint">Pantalla "Nueva Tarea Académica" con OutlinedTextField y botones Cancelar/Guardar</div>
+</div>
+
+<div class="screenshot-box">
+  <div class="icon">📋</div>
+  <div class="label">INSERTAR CAPTURA — Lista actualizada con la nueva tarea al final</div>
+  <div class="hint">LazyColumn mostrando las 2 tareas originales más la nueva tarea agregada</div>
+</div>
+
+<h2>5.4 Preservación de Estado ante Rotación de Pantalla</h2>
+<p>
+Al rotar el emulador (Ctrl+F11 en Android Studio), Android destruye y recrea la Activity.
+El <code>MutableStateFlow</code> del repositorio mantiene en memoria el último valor emitido,
+de modo que cuando el ViewModel reinicia la observación en <code>observeTasks()</code>, el
+flujo emite inmediatamente la lista actual sin parpadeo ni pérdida de información.
+</p>
+
+<div class="screenshot-box">
+  <div class="icon">🔄</div>
+  <div class="label">INSERTAR CAPTURA — Aplicación en modo landscape tras rotación</div>
+  <div class="hint">Emulador rotado mostrando la misma lista con los mismos estados de checkbox preservados</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 6 — DESAFÍO EXTRA
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">6. Desafío Extra — Regla de Dominio: Mínimo 5 Caracteres</h1>
+
+<div class="challenge">
+  <strong>Enunciado:</strong> Implementar una regla de negocio en la capa de Dominio que prohíba
+  estrictamente ingresar tareas cuyo título tenga menos de 5 caracteres, gatillando un estado de
+  error controlado y recuperable desde la UI sin crashes.
+</div>
+
+<h2>6.1 Implementación en el Dominio</h2>
+<p>
+La validación se implementó directamente en <code>AddTaskUseCase</code>, que es el lugar
+correcto según Clean Architecture: la regla pertenece al dominio y no debe vivir en la UI
+ni en el repositorio.
+</p>
+<pre>// AddTaskUseCase.kt
+if (title.trim().length &lt; 5) {
+    throw IllegalArgumentException(
+        "La regla de dominio exige un mínimo de 5 caracteres."
+    )
+}</pre>
+
+<p>
+Cuando el ViewModel invoca <code>addTaskUseCase(newTaskTitle)</code> y el título no supera
+los 5 caracteres, la excepción es capturada por el bloque <code>catch (e: IllegalArgumentException)</code>
+del ViewModel, que emite <code>AcademicTaskUiState.Error(e.message)</code> sin propagar
+el crash a la Activity.
+</p>
+
+<h2>6.2 Recuperación Controlada en la UI</h2>
+<p>
+Se actualizó el bloque del estado <code>Error</code> en <code>AcademicTaskListScreen</code>
+para incluir un botón "Reintentar" que navega de vuelta al formulario, permitiendo al usuario
+corregir el título sin necesidad de reiniciar la aplicación.
+</p>
+<pre>is AcademicTaskUiState.Error -&gt; {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = state.message,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(onClick = { viewModel.onNavigateToCreate() }) {
+            Text("Reintentar")
+        }
+    }
+}</pre>
+
+<h2>6.3 Evidencia del Comportamiento</h2>
+
+<div class="screenshot-box">
+  <div class="icon">⚠️</div>
+  <div class="label">INSERTAR CAPTURA — Mensaje de error en pantalla al ingresar título corto</div>
+  <div class="hint">Pantalla mostrando: "La regla de dominio exige un mínimo de 5 caracteres." en rojo + botón Reintentar</div>
+</div>
+
+<h2>6.4 Evidencia en Logcat</h2>
+<p>
+En Android Studio, en la pestaña <strong>Logcat</strong>, al intentar guardar una tarea con
+título de menos de 5 caracteres se puede observar el flujo de la excepción capturada
+controladamente por el ViewModel.
+</p>
+
+<div class="screenshot-box">
+  <div class="icon">🖥️</div>
+  <div class="label">INSERTAR CAPTURA — Logcat mostrando la captura controlada del error</div>
+  <div class="hint">Filtrar Logcat por "IllegalArgument" o el tag de tu app para mostrar la excepción capturada</div>
+</div>
+
+<div class="note">
+  <strong>Importante:</strong> La excepción es capturada dentro del bloque
+  <code>try-catch</code> del ViewModel y nunca llega al sistema operativo Android, por lo tanto
+  no provoca un ANR ni un crash. Esto demuestra el correcto manejo de errores en la máquina
+  de estados UDF.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 7 — HISTORIAL DE COMMITS
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">7. Historial de Control de Versiones</h1>
+
+<p>
+El proyecto cumple con el requisito de al menos 4 commits semánticos en GitHub bajo la
+convención <strong>Conventional Commits</strong>:
+</p>
+
+<table>
+  <tr>
+    <th>#</th>
+    <th>Hash</th>
+    <th>Mensaje semántico</th>
+    <th>Descripción</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td><code>a9079aa</code></td>
+    <td>Laboratorio 5.2 - Recomposición y State Hoisting</td>
+    <td>Commit base previo al laboratorio de arquitectura</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><code>c1f5721</code></td>
+    <td><strong>feat: domain layer core</strong></td>
+    <td>AcademicTask, AcademicTaskRepository, GetTasksUseCase y AddTaskUseCase con Desafío Extra</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><code>0bbecf1</code></td>
+    <td><strong>feat: data layer - in-memory repository</strong></td>
+    <td>InMemoryTaskRepository con MutableStateFlow reactivo y 2 tareas predeterminadas</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><code>59f44e4</code></td>
+    <td><strong>feat: mvvm presentation implementation</strong></td>
+    <td>AcademicTaskUiState, AcademicTaskViewModel, AcademicTaskScreen con LazyColumn</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><code>4223346</code></td>
+    <td><strong>feat: wire clean architecture dependency graph in MainActivity</strong></td>
+    <td>Orquestación manual de dependencias con enableEdgeToEdge y ProgramacionMovilTheme</td>
+  </tr>
+</table>
+
+<div class="screenshot-box">
+  <div class="icon">🌿</div>
+  <div class="label">INSERTAR CAPTURA — Historial de commits en GitHub</div>
+  <div class="hint">Pantalla de commits en github.com/StevenAJ23/... mostrando los 4+ commits semánticos</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 8 — CONCLUSIONES
+     ══════════════════════════════════════════════════ -->
+<h1 class="page-break">8. Conclusiones</h1>
+
+<ol>
+  <li style="margin-bottom: 14px;">
+    <strong>La separación física de capas elimina el antipatrón "God Activity".</strong>
+    Al dividir el código en paquetes <code>domain</code>, <code>data</code> y <code>ui</code>,
+    cada componente tiene una única responsabilidad bien definida. El resultado es un código
+    significativamente más legible, mantenible y resistente a cambios en cualquier capa sin
+    afectar a las demás.
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>El Flujo Unidireccional de Datos (UDF) con StateFlow garantiza coherencia del estado.</strong>
+    Al exponer únicamente un <code>StateFlow</code> inmutable desde el ViewModel, se elimina
+    la posibilidad de que la vista modifique el estado directamente, lo que previene condiciones
+    de carrera e inconsistencias visuales. Cada cambio de estado es trazable y predecible.
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>Los Use Cases hacen la lógica de negocio portátil y testable.</strong>
+    Al encapsular cada operación en un caso de uso independiente del framework de Android, es
+    posible probar la lógica de validación (por ejemplo, el mínimo de 5 caracteres del Desafío
+    Extra) con pruebas unitarias puras en JVM, sin necesidad de emulador ni mocks complejos.
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>MutableStateFlow como repositorio en memoria es una solución efectiva para prototipos.</strong>
+    Emitir flujos reactivos desde un <code>MutableStateFlow</code> permite simular el
+    comportamiento de una base de datos real (Room) con una fracción de la complejidad,
+    siendo ideal para demostrar patrones arquitectónicos sin distractores de infraestructura.
+  </li>
+  <li>
+    <strong>El manejo de errores en el ViewModel evita crashes sin sacrificar la experiencia de usuario.</strong>
+    Capturar las <code>IllegalArgumentException</code> del dominio dentro del
+    <code>viewModelScope</code> y emitirlas como <code>AcademicTaskUiState.Error</code>
+    permite mostrar mensajes descriptivos y opciones de recuperación, cumpliendo con los
+    estándares de robustez de aplicaciones de producción.
+  </li>
+</ol>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 9 — RECOMENDACIONES
+     ══════════════════════════════════════════════════ -->
+<h1>9. Recomendaciones</h1>
+
+<ol>
+  <li style="margin-bottom: 14px;">
+    <strong>Adoptar Hilt o Koin para la inyección de dependencias.</strong>
+    En este laboratorio la orquestación se realizó manualmente en <code>MainActivity</code>.
+    En proyectos de producción se recomienda usar un framework de DI como
+    <strong>Hilt</strong> (oficial de Google) para eliminar el boilerplate, gestionar el
+    ciclo de vida de los objetos y facilitar el reemplazo de implementaciones en pruebas.
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>Implementar Room para persistencia real de datos.</strong>
+    El repositorio en memoria pierde todos los datos al cerrar la aplicación. Se recomienda
+    migrar <code>InMemoryTaskRepository</code> a una implementación con Room Database,
+    manteniendo intacto el contrato <code>AcademicTaskRepository</code>, lo cual no requiere
+    modificar ninguna otra capa (demostración del principio Open/Closed de SOLID).
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>Agregar un ToggleTaskCompletionUseCase para completar el patrón.</strong>
+    La operación de alternar el estado de completado actualmente llama directamente al
+    repositorio desde el ViewModel. Para mantener la coherencia arquitectónica, se
+    recomienda crear un <code>ToggleTaskCompletionUseCase</code> que encapsule esta
+    operación y permita agregar reglas de negocio futuras (por ejemplo, auditoría de cambios).
+  </li>
+  <li style="margin-bottom: 14px;">
+    <strong>Agregar el uso de ViewModelFactory para sobrevivir rotaciones correctamente.</strong>
+    En la implementación actual, el ViewModel se instancia manualmente en <code>onCreate</code>,
+    lo que significa que no está gestionado por el <code>ViewModelStore</code>. Para proyectos
+    reales se debe usar <code>ViewModelProvider.Factory</code> o <code>viewModels()</code>
+    con Hilt, garantizando que el ViewModel y su estado sobrevivan completamente a los cambios
+    de configuración.
+  </li>
+  <li>
+    <strong>Implementar pruebas unitarias para los Use Cases.</strong>
+    Al ser independientes del framework, <code>GetTasksUseCase</code> y
+    <code>AddTaskUseCase</code> pueden probarse con JUnit 4/5 usando un repositorio falso
+    (<em>fake</em>). Se recomienda implementar al menos un test que verifique que el
+    <code>AddTaskUseCase</code> lanza <code>IllegalArgumentException</code> ante títulos
+    de menos de 5 caracteres.
+  </li>
+</ol>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 10 — REFERENCIAS
+     ══════════════════════════════════════════════════ -->
+<h1>10. Referencias</h1>
+<ul>
+  <li>Android Developers. (2024). <em>Guide to app architecture</em>. Google. https://developer.android.com/topic/architecture</li>
+  <li>Android Developers. (2024). <em>ViewModel overview</em>. Google. https://developer.android.com/topic/libraries/architecture/viewmodel</li>
+  <li>Android Developers. (2024). <em>StateFlow and SharedFlow</em>. Google. https://developer.android.com/kotlin/flow/stateflow-and-sharedflow</li>
+  <li>Martin, R. C. (2017). <em>Clean Architecture: A Craftsman's Guide to Software Structure and Design</em>. Prentice Hall.</li>
+  <li>JetBrains. (2024). <em>Kotlin Coroutines — Flow</em>. https://kotlinlang.org/docs/flow.html</li>
+  <li>RDA-3 Laboratorio 9.1 — Guía del docente: Arquitectura de Aplicaciones (MVVM y Clean Architecture). 2026.</li>
+</ul>
+
+<div class="footer">
+  Laboratorio 9.1 — MVVM y Clean Architecture · RDA-3 · Steven Rosero · 2026
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
