@@ -76,6 +76,7 @@ class AcademicTaskViewModel(
                 newTaskTitle = ""
             } catch (e: IllegalArgumentException) {
                 _uiState.value = AcademicTaskUiState.Error(e.message ?: "Dato inválido")
+                currentScreen = ScreenType.LIST
             } catch (e: Exception) {
                 _uiState.value = AcademicTaskUiState.Error("Error al guardar: ${e.localizedMessage}")
             }
